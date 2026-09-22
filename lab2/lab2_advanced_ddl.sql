@@ -20,3 +20,18 @@ CREATE DATABASE university_test
  
 ALTER DATABASE university_test WITH IS_TEMPLATE = true;
 
+Task 1.2.
+1.
+CREATE TABLESPACE student_data
+    LOCATION 'C:\data\students';
+
+2.
+CREATE TABLESPACE course_data
+    OWNER postgres
+    LOCATION '/data/courses';
+
+3.
+CREATE DATABASE university_distributed
+    TABLESPACE student_data
+    TEMPLATE template0
+    ENCODING 'LATIN9';
