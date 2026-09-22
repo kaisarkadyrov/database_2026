@@ -78,3 +78,53 @@ CREATE TABLE courses (
     is_online        BOOLEAN,
     created_at       TIMESTAMP WITHOUT TIME ZONE
 );
+
+Task 2.2.
+1.
+CREATE TABLE class_schedule (
+    schedule_id      SERIAL PRIMARY KEY,
+    course_id        INTEGER,
+    professor_id     INTEGER,
+    classroom        VARCHAR(20),
+    class_date       DATE,
+    start_time       TIME WITHOUT TIME ZONE,
+    end_time         TIME WITHOUT TIME ZONE,
+    duration         INTERVAL
+);
+
+2.
+CREATE TABLE student_records (
+    record_id              SERIAL PRIMARY KEY,
+    student_id             INTEGER,
+    course_id              INTEGER,
+    semester               VARCHAR(20),
+    year                   INTEGER,
+    grade                  CHAR(2),
+    attendance_percentage  NUMERIC(4,1),
+    submission_timestamp   TIMESTAMP WITH TIME ZONE,
+    last_updated           TIMESTAMP WITH TIME ZONE
+);
+
+#Part 3
+
+Task 3.1
+1.
+ALTER TABLE students ADD COLUMN middle_name VARCHAR(30);
+ALTER TABLE students ADD COLUMN student_status VARCHAR(20);
+ALTER TABLE students ALTER COLUMN phone TYPE VARCHAR(20);
+ALTER TABLE students ALTER COLUMN student_status SET DEFAULT 'ACTIVE';
+ALTER TABLE students ALTER COLUMN gpa SET DEFAULT 0.00;
+
+2.
+ALTER TABLE professors ADD COLUMN department_code CHAR(5);
+ALTER TABLE professors ADD COLUMN research_area TEXT;
+ALTER TABLE professors ALTER COLUMN years_experience TYPE SMALLINT;
+ALTER TABLE professors ALTER COLUMN is_tenured SET DEFAULT false;
+ALTER TABLE professors ADD COLUMN last_promotion_date DATE;
+
+3.
+ALTER TABLE courses ADD COLUMN prerequisite_course_id INTEGER;
+ALTER TABLE courses ADD COLUMN difficulty_level SMALLINT;
+ALTER TABLE courses ALTER COLUMN course_code TYPE VARCHAR(10);
+ALTER TABLE courses ALTER COLUMN credits SET DEFAULT 3;
+ALTER TABLE courses ADD COLUMN lab_required BOOLEAN DEFAULT false;
