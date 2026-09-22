@@ -129,4 +129,4 @@ ALTER TABLE courses ALTER COLUMN course_code TYPE VARCHAR(10);
 ALTER TABLE courses ALTER COLUMN credits SET DEFAULT 3;
 ALTER TABLE courses ADD COLUMN lab_required BOOLEAN DEFAULT false;
 
-t
+d
