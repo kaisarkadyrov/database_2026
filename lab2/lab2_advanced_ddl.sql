@@ -143,3 +143,42 @@ ALTER TABLE student_records ALTER COLUMN grade TYPE VARCHAR(5);
 ALTER TABLE student_records ALTER COLUMN extra_credit_points SET DEFAULT 0.0;
 ALTER TABLE student_records ADD COLUMN final_exam_date DATE;
 ALTER TABLE student_records DROP COLUMN last_updated;
+
+#Part 4
+
+Task 4.1
+1.
+CREATE TABLE departments (
+    department_id     SERIAL PRIMARY KEY,
+    department_name   VARCHAR(100),
+    department_code   CHAR(5),
+    building          VARCHAR(50),
+    phone             VARCHAR(15),
+    budget            NUMERIC(14,2),
+    established_year  INTEGER
+);
+
+2.
+CREATE TABLE library_books (
+    book_id                SERIAL PRIMARY KEY,
+    isbn                   CHAR(13),
+    title                  VARCHAR(200),
+    author                 VARCHAR(100),
+    publisher              VARCHAR(100),
+    publication_date       DATE,
+    price                  NUMERIC(8,2),
+    is_available           BOOLEAN,
+    acquisition_timestamp  TIMESTAMP WITHOUT TIME ZONE
+);
+ 
+3.
+CREATE TABLE student_book_loans (
+    loan_id       SERIAL PRIMARY KEY,
+    student_id    INTEGER,
+    book_id       INTEGER,
+    loan_date     DATE,
+    due_date      DATE,
+    return_date   DATE,
+    fine_amount   NUMERIC(6,2),
+    loan_status   VARCHAR(20)
+);
