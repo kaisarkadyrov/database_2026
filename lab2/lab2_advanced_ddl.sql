@@ -4,7 +4,7 @@
 Task 1.1.
 1.
 CREATE DATABASE university_main
-    OWNER CURRENT_USER
+    OWNER postgres
     TEMPLATE template0
     ENCODING 'UTF8';
 
@@ -28,13 +28,15 @@ CREATE TABLESPACE student_data
 2.
 CREATE TABLESPACE course_data
     OWNER postgres
-    LOCATION '/data/courses';
+    LOCATION 'C:\data\courses';
 
 3.
 CREATE DATABASE university_distributed
     TABLESPACE student_data
     TEMPLATE template0
-    ENCODING 'LATIN9';
+    ENCODING 'LATIN9'
+    LC_COLLATE 'C'
+    LC_CTYPE 'C';
 
 #Part 2
 #Task 2.1.
@@ -237,7 +239,8 @@ CREATE TABLE semester_calendar (
 );
 
 Task 5.2
- 
+
+ALTER DATABASE university_test WITH IS_TEMPLATE = false;
 DROP DATABASE IF EXISTS university_test;
 DROP DATABASE IF EXISTS university_distributed;
  
