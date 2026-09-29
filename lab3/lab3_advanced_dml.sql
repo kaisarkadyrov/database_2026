@@ -98,3 +98,26 @@ WHERE EXISTS (SELECT 1
 UPDATE employees
 SET salary = salary * 1.5, status = 'Promoted'
 WHERE department = 'Sales';
+
+--Part D
+--13
+delete from employees
+WHERE status = 'Terminated';
+
+--14
+DELETE from employees
+WHERE salary < 40000
+AND hire_date > '2023-01-01'
+AND department IS NULL;
+
+--15
+delete from departments
+WHERE dept_name NOT IN (SELECT DISTINCT department
+                        FROM employees
+                        WHERE department IS NOT NULL);
+
+--16
+DELETE FROM projects
+WHERE end_date < '2023-01-01'
+RETURNING *;
+
