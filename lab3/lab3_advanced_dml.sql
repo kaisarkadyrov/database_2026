@@ -121,3 +121,17 @@ DELETE FROM projects
 WHERE end_date < '2023-01-01'
 RETURNING *;
 
+--Part E
+--17
+INSERT INTO employees (first_name, last_name, department, salary, hire_date)
+VALUES ('Nobody', 'Yet', NULL, NULL, CURRENT_DATE);
+
+--18
+UPDATE employees
+SET department = 'Unassigned'
+WHERE department IS NULL;
+
+--19
+DELETE FROM employees
+WHERE salary IS NULL
+OR department is NULL;
