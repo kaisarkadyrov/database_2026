@@ -135,3 +135,24 @@ WHERE department IS NULL;
 DELETE FROM employees
 WHERE salary IS NULL
 OR department is NULL;
+
+-- Part F
+--20
+INSERT INTO employees (first_name, last_name, department, salary, hire_date)
+VALUES ('Asel', 'Mukhamed', 'IT', 60000, CURRENT_DATE)
+RETURNING emp_id, first_name || ' ' || last_name AS full_name;
+
+--21
+UPDATE employees e
+SET salary = e.salary + 5000
+FROM (select emp_id, salary as old_salary
+      FROM employees
+      WHERE department = 'IT') as old_data
+WHERE e.emp_id = old_data.emp_id
+RETURNING e.emp_id, old_data.old_salary, e.salary AS new_salary;
+
+--22
+DELETE FROM employees
+WHERE hire_date < '2020-01-01'
+RETURNING *;
+
