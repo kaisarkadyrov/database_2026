@@ -156,3 +156,68 @@ DELETE FROM employees
 WHERE hire_date < '2020-01-01'
 RETURNING *;
 
+--Part G
+--23
+INSERT INTO employees (first_name, last_name, department, salary, hire_date)
+SELECT 'Asel', 'Mukhamed', 'IT', 60000, CURRENT_DATE
+WHERE NOT EXISTS (SELECT 1
+                  FROM employees
+                  WHERE first_name = 'Asel'
+                    AND last_name  = 'Mukhamed');
+
+INSERT INTO employees (first_name, last_name, department, salary, hire_date)
+SELECT 'Yerzhan', 'Baitas', 'IT', 58000, CURRENT_DATE
+WHERE NOT EXISTS (SELECT 1
+                  FROM employees
+                  WHERE first_name = 'Yerzhan'
+                    AND last_name  = 'Baitas');
+
+--24
+UPDATE employees
+SET salary = salary * CASE
+                          WHEN (SELECT d.budget
+                                FROM departments d
+                                WHERE d.dept_name = employees.department) > 100000
+                              THEN 1.10
+                          ELSE 1.05
+                      END;
+
+--25
+INSERT INTO employees (first_name, last_name, department, salary, hire_date)
+VALUES ('Bulk1', 'Test', 'BulkDept', 40000, CURRENT_DATE),
+       ('Bulk2', 'Test', 'BulkDept', 42000, CURRENT_DATE),
+       ('Bulk3', 'Test', 'BulkDept', 44000, CURRENT_DATE),
+       ('Bulk4', 'Test', 'BulkDept', 46000, CURRENT_DATE),
+       ('Bulk5', 'Test', 'BulkDept', 48000, CURRENT_DATE);
+
+UPDATE employees
+SET salary = salary * 1.10
+WHERE department = 'BulkDept';
+
+--26
+CREATE TABLE employee_archive (LIKE employees INCLUDING ALL);
+
+INSERT INTO employees (first_name, last_name, department, salary, hire_date, status)
+VALUES ('Old', 'Timer', 'HR', 50000, '2021-01-01', 'Inactive');
+
+BEGIN;
+
+INSERT INTO employee_archive
+SELECT *
+FROM employees
+WHERE status = 'Inactive';
+
+DELETE FROM employees
+WHERE status = 'Inactive';
+
+COMMIT;
+
+--27
+UPDATE projects p
+SET end_date = p.end_date + 30
+WHERE p.budget > 50000
+  AND (SELECT COUNT(*)
+       FROM employees e
+       JOIN departments d ON d.dept_name = e.department
+       WHERE d.dept_id = p.dept_id) > 3;
+
