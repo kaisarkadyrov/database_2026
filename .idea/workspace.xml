@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="66da5193-dc71-4338-b74e-0ddce430da61" name="Changes" comment="Task7" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="50126851-42de-4732-98b5-e2029d39ba98" value="" />
+      <entry key="7b8db2a8-0b96-4a9d-a828-6a8236b09832" value="" />
+      <entry key="b00b7cbc-66e4-46ab-85a4-95a40b97ca9c" value="" />
+      <entry key="b58135ae-696f-4e2f-b8d9-327cd4870408" value="" />
+      <entry key="eb4a9adc-dd94-4eef-8553-5cf8c9e99f49" value="" />
+    </colors>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0000000009022998" />
+      <entry key="S60" value="1.0001627525227592" />
+      <entry key="M2" value="1.1192419261670927" />
+      <entry key="M5" value="10.210216785713818" />
+      <entry key="M10" value="49.97161707080784" />
+      <entry key="M15" value="94.26423112624053" />
+      <entry key="M30" value="194.06805118482336" />
+      <entry key="H1" value="290.4375534705577" />
+      <entry key="H2" value="359.6000331933722" />
+      <entry key="H4" value="401.3922518455126" />
+      <entry key="D1" value="440.624395706649" />
+      <entry key="W1" value="447.79216310610605" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="3.790217087441753E-167" />
+      <entry key="S5" value="3.067006594842871E-67" />
+      <entry key="S10" value="7.934391683049351E-34" />
+      <entry key="S30" value="3.041231686195196E-11" />
+      <entry key="S60" value="1.944486411491255E-5" />
+      <entry key="M2" value="0.02027082666738868" />
+      <entry key="M5" value="1.8137854382706273" />
+      <entry key="M10" value="9.937375865687144" />
+      <entry key="M15" value="18.968448111919415" />
+      <entry key="M30" value="39.028750169299755" />
+      <entry key="H1" value="58.090601021093676" />
+      <entry key="H2" value="71.63174978160676" />
+      <entry key="H4" value="79.76817376192822" />
+      <entry key="D1" value="87.37851208982241" />
+      <entry key="W1" value="88.76623463717243" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9265880618903709" />
+      <entry key="MS500" value="0.9848664428955506" />
+      <entry key="S2" value="0.9961949481330542" />
+      <entry key="S5" value="0.9984762383082793" />
+      <entry key="S10" value="0.9992378287015956" />
+      <entry key="S30" value="0.9997458792588718" />
+      <entry key="S60" value="1.0000545966873364" />
+      <entry key="M2" value="1.1391802764763415" />
+      <entry key="M5" value="12.01460030730062" />
+      <entry key="M10" value="59.883727214388585" />
+      <entry key="M15" value="113.20075096421836" />
+      <entry key="M30" value="233.0641570959972" />
+      <entry key="H1" value="348.5039186264382" />
+      <entry key="H2" value="431.21685456056986" />
+      <entry key="H4" value="481.1521169863764" />
+      <entry key="D1" value="528.001391380228" />
+      <entry key="W1" value="536.5581776828913" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3IlMFc4OYmZfn82EfPmVUW5jpog" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/user"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql",
+      "sqlite"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\user\DataGripProjects\default\lab3" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="66da5193-dc71-4338-b74e-0ddce430da61" name="Changes" comment="" />
+      <created>1788334608367</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1788334608367</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Lab3" />
+    <MESSAGE value="first_task" />
+    <MESSAGE value="Task1" />
+    <MESSAGE value="Task2" />
+    <MESSAGE value="Task3" />
+    <MESSAGE value="Task4" />
+    <MESSAGE value="Task5" />
+    <MESSAGE value="Task6" />
+    <MESSAGE value="Task7" />
+    <option name="LAST_COMMIT_MESSAGE" value="Task7" />
+  </component>
+</project>
