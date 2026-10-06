@@ -33,3 +33,26 @@ SELECT * from employees
 --Task2.4
 SELECT * FROM employees
     WHERE manager_id IS NOT NULL AND department = 'IT';
+
+--Part3
+--Task3.1
+SELECT upper(first_name) || ' ' || upper(last_name) as upper_names,
+       length(last_name) AS len_last_name,
+       substring(email FROM 1 FOR 3) as email_prefix
+FROM employees;
+--Task3.2
+SELECT first_name || ' ' || last_name AS full_name,
+       salary * 12 AS annual_salary,
+       ROUND(salary/12, 2) as montly_salary,
+       salary * 0.1 as raise_amount
+FROM employees;
+--Task3.3
+SELECT format('Project: %s - Budget: $%s - Status: %s',
+        project_name, budget, status
+       ) as project_info
+FROM projects;
+--Task3.4
+SELECT first_name || ' ' || last_name AS full_name,
+       hire_date,
+       EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) AS years_with_company
+FROM employees;
