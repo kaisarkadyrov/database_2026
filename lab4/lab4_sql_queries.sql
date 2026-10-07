@@ -80,3 +80,35 @@ SELECT MAX(salary) AS max_salary,
        MIN(salary) AS min_salary,
        SUM(salary) AS total_payroll
 FROM employees;
+
+--Part5
+--Task5.1
+SELECT first_name || ' ' || last_name AS full_name,
+       employee_id,
+       salary
+FROM employees
+WHERE salary > 65000
+UNION
+SELECT first_name || ' ' || last_name AS full_name,
+       employee_id,
+       salary
+FROM employees
+WHERE hire_date > '2020-01-01';
+--Task5.2
+SELECT first_name || ' ' || last_name AS full_name,
+       salary
+FROM employees
+WHERE department = 'IT'
+INTERSECT
+SELECT first_name || ' ' || last_name AS full_name,
+       salary
+FROM employees
+WHERE salary > 65000;
+--Task5.3
+SELECT employee_id, e.first_name || ' ' || e.last_name AS full_name
+FROM employees e
+EXCEPT
+SELECT e.employee_id, e.first_name || ' ' || e.last_name AS full_name
+FROM employees e
+JOIN assignments a
+ON e.employee_id = a.employee_id
