@@ -139,3 +139,38 @@ WHERE salary > ANY (
     FROM employees
     WHERE department = 'Sales'
     );
+
+--Part7
+--Task7.1
+-- Task 7.1
+SELECT e.first_name || ' ' || e.last_name AS full_name,
+       e.department,
+       e.salary,
+       AVG(a.hours_worked) AS avg_hours_worked,
+       RANK() OVER (PARTITION BY e.department ORDER BY e.salary ) AS salary_rank_in_dept
+FROM employees e
+LEFT JOIN assignments a ON e.employee_id = a.employee_id
+GROUP BY e.employee_id, e.first_name, e.last_name, e.department, e.salary
+ORDER BY e.department, e.salary DESC;
+--Task7.2
+SELECT p.project_name,
+       SUM(a.hours_worked) AS total_hours,
+       COUNT(DISTINCT a.employee_id) as assigned_emp
+FROM projects p
+JOIN assignments a
+ON p.project_id = a.project_id
+GROUP BY p.project_id, p.project_name
+HAVING SUM(a.hours_worked) > 150;
+--Task7.3
+SELECT e.department,
+       COUNT(*) as total_employees,
+       AVG(e.salary) AS average_salary,
+       (SELECT e2.first_name || ' ' || e2.last_name as full_name
+        FROM employees e2
+        WHERE e2.department = e.department
+        ORDER BY e2.salary DESC
+        LIMIT 1) as highest_paid_employee,
+        GREATEST(MAX(e.salary) - AVG(e.salary), 0) AS max_above_avg,
+        LEAST(MIN(e.salary), AVG(e.salary)) AS lowest_value
+FROM employees e
+GROUP BY e.department;
