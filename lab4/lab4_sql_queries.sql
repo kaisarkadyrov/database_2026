@@ -111,4 +111,31 @@ EXCEPT
 SELECT e.employee_id, e.first_name || ' ' || e.last_name AS full_name
 FROM employees e
 JOIN assignments a
-ON e.employee_id = a.employee_id
+ON e.employee_id = a.employee_id;
+
+--Part6
+--Task6.1
+SELECT e.first_name || ' ' || e.last_name AS full_name
+FROM employees e
+WHERE EXISTS(
+    SELECT 1
+    FROM assignments a
+    WHERE a.employee_id = e.employee_id
+);
+--Task6.2
+SELECT first_name || ' ' || last_name AS full_name
+FROM employees
+WHERE employee_id IN (
+    SELECT a.employee_id
+    FROM assignments a
+    JOIN projects p ON a.project_id = p.project_id
+    WHERE p.status = 'Active'
+);
+--Task6.3
+SELECT first_name || ' ' || last_name AS full_name
+FROM employees
+WHERE salary > ANY (
+    SELECT salary
+    FROM employees
+    WHERE department = 'Sales'
+    );
