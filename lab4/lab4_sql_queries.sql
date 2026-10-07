@@ -56,3 +56,27 @@ SELECT first_name || ' ' || last_name AS full_name,
        hire_date,
        EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) AS years_with_company
 FROM employees;
+
+--Part4
+--Task4.1
+SELECT department, AVG(salary)
+FROM employees
+GROUP BY department;
+--Task4.2
+SELECT p.project_name,
+       SUM(a.hours_worked) AS total_hours
+FROM projects p
+JOIN assignments a
+    ON p.project_id = a.project_id
+GROUP BY p.project_name;
+--Task4.3
+SELECT department,
+       COUNT(*) as num_of_employees
+FROM employees
+GROUP BY department
+HAVING COUNT(*) > 1;
+--Task4.4
+SELECT MAX(salary) AS max_salary,
+       MIN(salary) AS min_salary,
+       SUM(salary) AS total_payroll
+FROM employees;
