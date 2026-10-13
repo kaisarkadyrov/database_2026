@@ -123,3 +123,35 @@ INSERT INTO inventory VALUES (2, 'Pen',      500, 0.75,  '2026-10-02 11:30:00');
 INSERT INTO customers VALUES (3, 'c@mail.com', NULL, '2026-03-01');
 INSERT INTO customers VALUES (4, 'd@mail.com', NULL, '2026-03-05');
 
+--Part3
+--Task3.1
+CREATE TABLE users (
+    user_id    INTEGER,
+    username   TEXT UNIQUE,
+    email      TEXT UNIQUE,
+    created_at TIMESTAMP
+);
+--Task3.2
+CREATE TABLE course_enrollments (
+    enrollment_id INTEGER,
+    student_id    INTEGER,
+    course_code   TEXT,
+    semester      TEXT,
+    UNIQUE (student_id, course_code, semester)
+);
+--Task3.3
+ALTER TABLE users DROP CONSTRAINT users_username_key;
+ALTER TABLE users DROP CONSTRAINT users_email_key;
+ALTER TABLE users ADD CONSTRAINT unique_username UNIQUE (username);
+ALTER TABLE users ADD CONSTRAINT unique_email    UNIQUE (email);
+
+INSERT INTO users VALUES (1, 'alice', 'alice@mail.com', now());
+INSERT INTO users VALUES (2, 'bob',   'bob@mail.com',   now());
+-- INSERT INTO users VALUES (3, 'alice', 'other@mail.com', now());
+--   ERROR: duplicate key value violates unique constraint "unique_username"
+-- INSERT INTO users VALUES (4, 'carol', 'bob@mail.com', now());
+--   ERROR: duplicate key value violates unique constraint "unique_email"
+-- NULLs do not conflict with UNIQUE (NULL <> NULL), so this works twice:
+INSERT INTO users VALUES (5, NULL, NULL, now());
+INSERT INTO users VALUES (6, NULL, NULL, now());
+
