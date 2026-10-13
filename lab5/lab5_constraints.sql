@@ -188,3 +188,74 @@ CREATE TABLE student_courses (
 -- 3. A table has one PRIMARY KEY because a row has exactly one main identity.
 --    It can have many UNIQUE constraints (email, username, isbn) as alternative keys.
 
+--Part5
+--Task5.1
+CREATE TABLE employees_dept (
+    emp_id    INTEGER PRIMARY KEY,
+    emp_name  TEXT NOT NULL,
+    dept_id   INTEGER REFERENCES departments,
+    hire_date DATE
+);
+INSERT INTO employees_dept VALUES (1, 'Aidar', 1, '2025-03-01');
+INSERT INTO employees_dept VALUES (2, 'Dana',  2, '2025-06-15');
+-- INSERT INTO employees_dept VALUES (3, 'Ghost', 99, '2026-02-01');
+--   ERROR: violates foreign key constraint "employees_dept_dept_id_fkey" (dept 99 does not exist)
+
+--Task5.2
+CREATE TABLE authors (
+    author_id   INTEGER PRIMARY KEY,
+    author_name TEXT NOT NULL,
+    country     TEXT
+);
+CREATE TABLE publishers (
+    publisher_id   INTEGER PRIMARY KEY,
+    publisher_name TEXT NOT NULL,
+    city           TEXT
+);
+CREATE TABLE books (
+    book_id          INTEGER PRIMARY KEY,
+    title            TEXT NOT NULL,
+    author_id        INTEGER REFERENCES authors,
+    publisher_id     INTEGER REFERENCES publishers,
+    publication_year INTEGER,
+    isbn             TEXT UNIQUE
+);
+INSERT INTO authors VALUES (1, 'Leo Tolstoy', 'Russia'), (2, 'Abai Kunanbayev', 'Kazakhstan'), (3, 'George Orwell', 'United Kingdom');
+INSERT INTO publishers VALUES (1, 'Penguin Books', 'London'), (2, 'Zhazushy', 'Almaty'), (3, 'Vintage', 'New York');
+INSERT INTO books VALUES (1, 'War and Peace', 1, 1, 1869, '978-0-14-044793-4');
+INSERT INTO books VALUES (2, 'Book of Words', 2, 2, 1904, '978-601-00-0001-1');
+INSERT INTO books VALUES (3, '1984',          3, 1, 1949, '978-0-452-28423-4');
+
+--Task5.3
+CREATE TABLE categories (
+    category_id   INTEGER PRIMARY KEY,
+    category_name TEXT NOT NULL
+);
+CREATE TABLE products_fk (
+    product_id   INTEGER PRIMARY KEY,
+    product_name TEXT NOT NULL,
+    category_id  INTEGER REFERENCES categories ON DELETE RESTRICT
+);
+CREATE TABLE orders (
+    order_id   INTEGER PRIMARY KEY,
+    order_date DATE NOT NULL
+);
+CREATE TABLE order_items (
+    item_id    INTEGER PRIMARY KEY,
+    order_id   INTEGER REFERENCES orders ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products_fk,
+    quantity   INTEGER CHECK (quantity > 0)
+);
+INSERT INTO categories VALUES (1, 'Electronics'), (2, 'Books');
+INSERT INTO products_fk VALUES (1, 'Laptop', 1), (2, 'Novel', 2);
+INSERT INTO orders VALUES (1, '2026-10-01'), (2, '2026-10-02');
+INSERT INTO order_items VALUES (1, 1, 1, 1), (2, 1, 2, 2), (3, 2, 1, 1);
+
+-- 1) RESTRICT: category with products cannot be deleted
+-- DELETE FROM categories WHERE category_id = 1;
+--   ERROR: update or delete on table "categories" violates foreign key constraint
+--   "products_fk_category_id_fkey" on table "products_fk"
+-- 2) CASCADE: deleting an order deletes its order_items
+DELETE FROM orders WHERE order_id = 1;   -- order_items 1 and 2 are deleted automatically
+SELECT * FROM order_items;               -- only item 3 (order 2) remains
+
