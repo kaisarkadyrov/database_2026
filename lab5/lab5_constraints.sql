@@ -79,4 +79,47 @@ INSERT INTO bookings VALUES (2, '2026-12-20', '2026-12-27', 10);
 -- INSERT INTO bookings VALUES (6, '2026-11-10', '2026-11-10', 2);
 --   ERROR: ... violates check constraint "bookings_dates_check"
 --   Reason: check_out_date must be strictly after check_in_date.
--- test
+
+
+--Part2
+--Task2.1
+CREATE TABLE customers (
+    customer_id       INTEGER NOT NULL,
+    email             TEXT    NOT NULL,
+    phone             TEXT,                -- nullable
+    registration_date DATE    NOT NULL
+);
+--Task2.2
+CREATE TABLE inventory (
+    item_id      INTEGER   NOT NULL,
+    item_name    TEXT      NOT NULL,
+    quantity     INTEGER   NOT NULL CHECK (quantity >= 0),
+    unit_price   NUMERIC   NOT NULL CHECK (unit_price > 0),
+    last_updated TIMESTAMP NOT NULL
+);
+--Task2.3
+INSERT INTO customers VALUES (1, 'a@mail.com', '+7-700-111-2233', '2026-01-10');
+INSERT INTO customers VALUES (2, 'b@mail.com', '+7-700-444-5566', '2026-02-15');
+INSERT INTO inventory VALUES (1, 'Notebook', 100, 2.50,  '2026-10-01 10:00:00');
+INSERT INTO inventory VALUES (2, 'Pen',      500, 0.75,  '2026-10-02 11:30:00');
+
+-- 2. NULL in NOT NULL columns
+-- INSERT INTO customers VALUES (NULL, 'c@mail.com', NULL, '2026-03-01');
+--   ERROR: null value in column "customer_id" of relation "customers" violates not-null constraint
+-- INSERT INTO customers VALUES (3, NULL, NULL, '2026-03-01');
+--   ERROR: null value in column "email" of relation "customers" violates not-null constraint
+-- INSERT INTO customers VALUES (3, 'c@mail.com', NULL, NULL);
+--   ERROR: null value in column "registration_date" of relation "customers" violates not-null constraint
+-- INSERT INTO inventory VALUES (3, NULL, 10, 1.00, now());
+--   ERROR: null value in column "item_name" of relation "inventory" violates not-null constraint
+-- INSERT INTO inventory VALUES (4, 'Eraser', NULL, 1.00, now());
+--   ERROR: null value in column "quantity" of relation "inventory" violates not-null constraint
+-- INSERT INTO inventory VALUES (5, 'Ruler', -5, 1.00, now());
+--   ERROR: ... violates check constraint "inventory_quantity_check"  (quantity must be >= 0)
+-- INSERT INTO inventory VALUES (6, 'Glue', 5, 0, now());
+--   ERROR: ... violates check constraint "inventory_unit_price_check" (unit_price must be > 0)
+
+-- 3. NULL in nullable column (phone) - succeeds
+INSERT INTO customers VALUES (3, 'c@mail.com', NULL, '2026-03-01');
+INSERT INTO customers VALUES (4, 'd@mail.com', NULL, '2026-03-05');
+
