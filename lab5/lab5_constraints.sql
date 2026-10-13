@@ -79,3 +79,4 @@ INSERT INTO bookings VALUES (2, '2026-12-20', '2026-12-27', 10);
 -- INSERT INTO bookings VALUES (6, '2026-11-10', '2026-11-10', 2);
 --   ERROR: ... violates check constraint "bookings_dates_check"
 --   Reason: check_out_date must be strictly after check_in_date.
+-- test
