@@ -1,4 +1,7 @@
-﻿--Part1
+﻿-- Name: Kadyrov Kaisar
+-- Student ID: 25B031302
+
+--Part1
 --Task1.1
 CREATE TABLE employees (
     employee_id INTEGER,
@@ -259,3 +262,89 @@ INSERT INTO order_items VALUES (1, 1, 1, 1), (2, 1, 2, 2), (3, 2, 1, 1);
 DELETE FROM orders WHERE order_id = 1;   -- order_items 1 and 2 are deleted automatically
 SELECT * FROM order_items;               -- only item 3 (order 2) remains
 
+--Part 6
+CREATE SCHEMA ecommerce;
+SET search_path TO ecommerce;
+
+CREATE TABLE customers (
+    customer_id       INTEGER PRIMARY KEY,
+    name              TEXT NOT NULL,
+    email             TEXT NOT NULL UNIQUE,
+    phone             TEXT,
+    registration_date DATE NOT NULL
+);
+CREATE TABLE products (
+    product_id     INTEGER PRIMARY KEY,
+    name           TEXT NOT NULL,
+    description    TEXT,
+    price          NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+    stock_quantity INTEGER NOT NULL CHECK (stock_quantity >= 0)
+);
+CREATE TABLE orders (
+    order_id     INTEGER PRIMARY KEY,
+    customer_id  INTEGER NOT NULL REFERENCES customers ON DELETE RESTRICT,
+    order_date   DATE NOT NULL,
+    total_amount NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
+    status       TEXT NOT NULL CHECK (status IN ('pending','processing','shipped','delivered','cancelled'))
+);
+CREATE TABLE order_details (
+    order_detail_id INTEGER PRIMARY KEY,
+    order_id        INTEGER NOT NULL REFERENCES orders ON DELETE CASCADE,
+    product_id      INTEGER NOT NULL REFERENCES products ON DELETE RESTRICT,
+    quantity        INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price      NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0)
+);
+
+INSERT INTO customers VALUES
+ (1, 'Aidar Nurlan', 'aidar@mail.kz',   '+7-701-000-0001', '2026-01-05'),
+ (2, 'Dana Sarsen',  'dana@mail.kz',    '+7-701-000-0002', '2026-02-11'),
+ (3, 'Timur Bek',    'timur@mail.kz',   NULL,              '2026-03-20'),
+ (4, 'Aigerim Omar', 'aigerim@mail.kz', '+7-701-000-0004', '2026-05-02'),
+ (5, 'Erlan Zhan',   'erlan@mail.kz',   '+7-701-000-0005', '2026-07-14');
+
+INSERT INTO products VALUES
+ (1, 'Laptop',    '15-inch laptop',     1200.00,  10),
+ (2, 'Mouse',     'Wireless mouse',       25.00, 100),
+ (3, 'Keyboard',  'Mechanical keyboard',  75.50,  50),
+ (4, 'Monitor',   '27-inch monitor',     300.00,  20),
+ (5, 'USB Cable', '1m USB-C cable',        5.99, 500);
+
+INSERT INTO orders VALUES
+ (1, 1, '2026-09-01', 1250.00, 'delivered'),
+ (2, 2, '2026-09-10',   75.50, 'shipped'),
+ (3, 3, '2026-09-15',  600.00, 'processing'),
+ (4, 4, '2026-09-20',   59.90, 'pending'),
+ (5, 5, '2026-09-25',   42.97, 'cancelled');
+
+INSERT INTO order_details VALUES
+ (1, 1, 1,  1, 1200.00),
+ (2, 1, 2,  2,   25.00),
+ (3, 2, 3,  1,   75.50),
+ (4, 3, 4,  2,  300.00),
+ (5, 4, 5, 10,    5.99),
+ (6, 5, 2,  1,   25.00),
+ (7, 5, 5,  3,    5.99);
+
+-- Tests (each must fail, so they are commented out)
+-- INSERT INTO customers VALUES (6, 'Dup', 'aidar@mail.kz', NULL, '2026-10-01');
+--   ERROR: duplicate key value violates unique constraint "customers_email_key"
+-- INSERT INTO products VALUES (6, 'Bad', NULL, -10, 5);
+--   ERROR: violates check constraint "products_price_check"
+-- INSERT INTO products VALUES (7, 'Bad', NULL, 10, -1);
+--   ERROR: violates check constraint "products_stock_quantity_check"
+-- INSERT INTO orders VALUES (6, 1, '2026-10-01', 10, 'lost');
+--   ERROR: violates check constraint "orders_status_check"
+-- INSERT INTO order_details VALUES (8, 1, 1, 0, 1200);
+--   ERROR: violates check constraint "order_details_quantity_check"
+-- INSERT INTO orders VALUES (6, 99, '2026-10-01', 10, 'pending');
+--   ERROR: violates foreign key constraint "orders_customer_id_fkey"
+-- DELETE FROM customers WHERE customer_id = 1;
+--   ERROR: violates foreign key constraint "orders_customer_id_fkey" (RESTRICT)
+-- DELETE FROM products WHERE product_id = 1;
+--   ERROR: violates foreign key constraint "order_details_product_id_fkey" (RESTRICT)
+
+-- CASCADE test (succeeds): order 5 and its 2 order_details are deleted
+DELETE FROM orders WHERE order_id = 5;
+SELECT * FROM order_details WHERE order_id = 5;   -- 0 rows
+
+SET search_path TO public;
