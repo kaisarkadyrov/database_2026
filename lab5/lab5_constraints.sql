@@ -155,3 +155,36 @@ INSERT INTO users VALUES (2, 'bob',   'bob@mail.com',   now());
 INSERT INTO users VALUES (5, NULL, NULL, now());
 INSERT INTO users VALUES (6, NULL, NULL, now());
 
+--Part4
+--Task4.1
+CREATE TABLE departments (
+    dept_id   INTEGER PRIMARY KEY,
+    dept_name TEXT NOT NULL,
+    location  TEXT
+);
+INSERT INTO departments VALUES (1, 'IT',      'Almaty');
+INSERT INTO departments VALUES (2, 'HR',      'Astana');
+INSERT INTO departments VALUES (3, 'Finance', 'Shymkent');
+-- INSERT INTO departments VALUES (1, 'Marketing', 'Almaty');
+--   ERROR: duplicate key value violates unique constraint "departments_pkey"
+-- INSERT INTO departments VALUES (NULL, 'Legal', 'Almaty');
+--   ERROR: null value in column "dept_id" violates not-null constraint
+
+--Task4.2
+CREATE TABLE student_courses (
+    student_id      INTEGER,
+    course_id       INTEGER,
+    enrollment_date DATE,
+    grade           TEXT,
+    PRIMARY KEY (student_id, course_id)
+);
+
+--Task4.3
+-- 1. UNIQUE vs PRIMARY KEY: both forbid duplicates, but PRIMARY KEY also forbids NULL
+--    (UNIQUE allows NULLs) and is the main identifier of a row / default target of foreign keys.
+-- 2. Single-column PK: one column identifies the row (dept_id, customer_id).
+--    Composite PK: only a combination is unique, e.g. junction tables like
+--    student_courses(student_id, course_id).
+-- 3. A table has one PRIMARY KEY because a row has exactly one main identity.
+--    It can have many UNIQUE constraints (email, username, isbn) as alternative keys.
+
