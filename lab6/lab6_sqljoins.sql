@@ -60,3 +60,26 @@ FROM employees e
 CROSS JOIN projects p
 ORDER BY e.emp_name, p.project_name;
 
+--Part3
+--Task3.1
+SELECT e.emp_name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.dept_id;
+--4 rows are returned. Tom Brown is not included because he does not have a department id
+
+--Task3.2
+SELECT emp_name, dept_name
+FROM employees
+INNER JOIN departments USING (dept_id);
+--dept_id shows only once in the table
+
+--Task3.3
+SELECT emp_name, dept_name
+FROM employees
+NATURAL INNER JOIN departments;
+
+--Task3.4
+SELECT e.emp_name, d.dept_name, p.project_name
+FROM employees e
+INNER JOIN departments d on e.dept_id = d.dept_id
+INNER JOIN projects p on d.dept_id = p.dept_id;
