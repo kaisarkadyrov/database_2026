@@ -40,3 +40,23 @@ budget) VALUES
 (4, 'Cloud Migration', 101, 150000),
 (5, 'AI Research', NULL, 200000);
 
+--Part2
+--Task2.1
+SELECT e.emp_name, d.dept_name
+FROM employees e CROSS JOIN departments d;
+
+--Task2.2
+--a
+SELECT employees.emp_name, departments.dept_name
+FROM employees, departments;
+--b
+SELECT e.emp_name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON TRUE;
+
+--Task2.3
+SELECT e.emp_name, p.project_name
+FROM employees e
+CROSS JOIN projects p
+ORDER BY e.emp_name, p.project_name;
+
