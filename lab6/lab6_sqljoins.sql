@@ -169,3 +169,141 @@ FULL JOIN departments d ON e.dept_id = d.dept_id
 WHERE e.emp_id IS NULL OR d.dept_id IS NULL;
 -- Result: Tom Brown (employee without department),
 --         Marketing (department without employees).
+
+--Part7
+--Task7.1
+SELECT e.emp_name, d.dept_name, e.salary
+FROM employees e
+LEFT JOIN departments d
+       ON e.dept_id = d.dept_id
+      AND d.location = 'Building A';
+-- 5 rows: John and Mike get 'IT'; Jane, Sarah, Tom get dept_name NULL.
+
+--Task7.2
+SELECT e.emp_name, d.dept_name, e.salary
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.dept_id
+WHERE d.location = 'Building A';
+-- 2 rows: John Smith and Mike Johnson only.
+--
+-- Difference: in Query 1 the condition is part of the matching rule,
+-- so it only decides WHICH department is attached; the LEFT JOIN still
+-- keeps every employee (non-matching ones get NULLs).
+-- In Query 2 the join is done first and WHERE filters the result
+-- afterwards; rows with location NULL or not 'Building A' are removed,
+-- so the LEFT JOIN effectively becomes an INNER JOIN.
+
+--Task7.3
+SELECT e.emp_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d
+        ON e.dept_id = d.dept_id
+       AND d.location = 'Building A';
+
+-- Filter in WHERE:
+SELECT e.emp_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.dept_id
+WHERE d.location = 'Building A';
+-- Answer: no difference, both return John Smith and Mike Johnson.
+-- An INNER JOIN keeps only rows where the whole ON condition is TRUE,
+-- and WHERE also keeps only rows where its condition is TRUE, so it
+-- does not matter at which stage the filter is applied - no rows are
+-- preserved with NULLs as in outer joins.
+
+--Part8
+--Task8.1
+SELECT
+    d.dept_name,
+    e.emp_name,
+    e.salary,
+    p.project_name,
+    p.budget
+FROM departments d
+LEFT JOIN employees e ON d.dept_id = e.dept_id
+LEFT JOIN projects  p ON d.dept_id = p.dept_id
+ORDER BY d.dept_name, e.emp_name;
+-- All 4 departments appear; Marketing with NULL employee and project.
+
+--Task8.2
+ALTER TABLE employees ADD COLUMN manager_id INT;
+
+UPDATE employees SET manager_id = 3    WHERE emp_id = 1;
+UPDATE employees SET manager_id = 3    WHERE emp_id = 2;
+UPDATE employees SET manager_id = NULL WHERE emp_id = 3;
+UPDATE employees SET manager_id = 3    WHERE emp_id = 4;
+UPDATE employees SET manager_id = 3    WHERE emp_id = 5;
+
+SELECT
+    e.emp_name AS employee,
+    m.emp_name AS manager
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.emp_id;
+-- Everyone's manager is Mike Johnson; Mike himself has manager NULL
+-- (LEFT JOIN keeps him in the result).
+
+--Task8.3
+SELECT d.dept_name, AVG(e.salary) AS avg_salary
+FROM departments d
+INNER JOIN employees e ON d.dept_id = e.dept_id
+GROUP BY d.dept_id, d.dept_name
+HAVING AVG(e.salary) > 50000;
+-- IT 52500, HR 60000, Finance 65000.
+
+-- Same task written with a subquery:
+SELECT d.dept_name, s.avg_salary
+FROM departments d
+INNER JOIN (
+    SELECT dept_id, AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY dept_id
+) s ON d.dept_id = s.dept_id
+WHERE s.avg_salary > 50000;
+
+-- =====================================================================
+-- Lab Questions
+-- =====================================================================
+
+-- 1. Difference between INNER JOIN and LEFT JOIN?
+--    INNER JOIN returns only rows that have a match in both tables.
+--    LEFT JOIN returns all rows from the left table; where there is no
+--    match in the right table, the right-side columns are NULL.
+--
+-- 2. When to use CROSS JOIN in practice?
+--    When every combination is needed: availability/schedule matrices
+--    (employees x projects), all size x color product variants,
+--    calendar of dates x stores for reports, generating test data.
+--
+-- 3. Why does the position of a filter (ON vs WHERE) matter for outer
+--    joins but not for inner joins?
+--    In an outer join, ON only decides which rows match; unmatched rows
+--    of the preserved table are still returned with NULLs. WHERE runs
+--    after the join and removes rows, including those NULL-filled rows.
+--    In an inner join unmatched rows are discarded anyway, so filtering
+--    during the join (ON) or after it (WHERE) gives the same result.
+--
+-- 4. SELECT COUNT(*) FROM table1 CROSS JOIN table2 (5 and 10 rows)?
+--    5 x 10 = 50.
+--
+-- 5. How does NATURAL JOIN choose join columns?
+--    It automatically joins on ALL columns that have the same name in
+--    both tables (equality on each), and outputs each such column once.
+--
+-- 6. Risks of NATURAL JOIN?
+--    - Columns are chosen implicitly: an unrelated column with the same
+--      name (e.g. "name", "created_at", "id") silently becomes part of
+--      the join condition and gives wrong or empty results.
+--    - Adding/renaming a column later can change the query's behavior
+--      without any error.
+--    - If there are no common columns it becomes a CROSS JOIN.
+--    - The query is harder to read because the condition is not visible.
+--
+-- 7. Convert SELECT * FROM A LEFT JOIN B ON A.id = B.id to RIGHT JOIN:
+--    SELECT * FROM B RIGHT JOIN A ON A.id = B.id;
+--    (Same rows; with SELECT * the column order changes - B's columns
+--    come first.)
+--
+-- 8. When to use FULL OUTER JOIN?
+--    When unmatched rows from BOTH tables are needed: reconciling two
+--    data sources, finding orphaned records on either side (as in 6.3),
+--    comparing two lists to see what is only in A, only in B, or in both.
