@@ -116,3 +116,6 @@ GROUP BY d.dept_id, d.dept_name
 ORDER BY employee_count DESC;
 -- IT 2, HR 1, Finance 1, Marketing 0.
 -- COUNT(e.emp_id) (not COUNT(*)) is used so Marketing gets 0, not 1.
+
+--Part5
+--Task5.1
