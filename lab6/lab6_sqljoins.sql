@@ -89,8 +89,7 @@ INNER JOIN projects p on d.dept_id = p.dept_id;
 
 --Part4
 --Task4.1
-SELECT e.emp_name, e.dept_id AS emp_dept, d.dept_id AS
-dept_dept, d.depth_name
+SELECT e.emp_name, e.dept_id AS emp_dept, d.dept_id AS dept_dept, d.dept_name
 FROM employees e
 LEFT JOIN departments d ON e.dept_id = d.dept_id;
 -- Answer: 5 rows. Tom Brown appears with NULL in emp_dept, dept_dept
@@ -100,6 +99,7 @@ LEFT JOIN departments d ON e.dept_id = d.dept_id;
 SELECT emp_name, dept_id, dept_name
 FROM employees
 LEFT JOIN departments USING (dept_id);
+
 
 --Task4.3
 SELECT e.emp_name, e.dept_id
@@ -119,3 +119,20 @@ ORDER BY employee_count DESC;
 
 --Part5
 --Task5.1
+SELECT e.emp_name, d.dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.dept_id = d.dept_id;
+-- 5 rows; Marketing appears with emp_name = NULL.
+
+--Task5.2
+SELECT e.emp_name, d.dept_name
+FROM departments d
+LEFT JOIN employees e ON e.dept_id = d.dept_id;
+
+--Task5.3
+SELECT d.dept_name, d.location
+FROM employees e
+RIGHT JOIN departments d ON e.dept_id = d.dept_id
+WHERE e.emp_id IS NULL;
+-- Result: Marketing, Building D.
+
