@@ -103,3 +103,38 @@ SELECT * FROM high_earners;
 -- is excluded because the condition is "> 55000", not ">=".
 -- LEFT JOIN is used so a high earner without a department is not lost
 -- (with INNER JOIN such an employee would disappear from the view).
+
+--Part3
+
+--Task3.1
+CREATE OR REPLACE VIEW employee_details AS
+SELECT e.emp_id,
+       e.emp_name,
+       e.salary,
+       d.dept_name,
+       d.location,
+       CASE
+           WHEN e.salary > 60000 THEN 'High'
+           WHEN e.salary > 50000 THEN 'Medium'
+           ELSE 'Standard'
+       END AS salary_grade
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.dept_id;
+
+SELECT * FROM employee_details;
+
+--Task3.2
+ALTER VIEW high_earners RENAME TO top_performers;
+
+SELECT * FROM top_performers;
+
+
+--Task3.3
+CREATE VIEW temp_view AS
+SELECT emp_id, emp_name, salary
+FROM employees
+WHERE salary < 50000;
+
+SELECT * FROM temp_view;
+
+DROP VIEW temp_view;
