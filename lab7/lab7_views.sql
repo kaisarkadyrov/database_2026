@@ -262,3 +262,191 @@ SELECT * FROM project_stats_mv;
 REFRESH MATERIALIZED VIEW project_stats_mv;
 
 SELECT * FROM project_stats_mv;
+
+--Part6
+
+--Task6.1
+CREATE ROLE analyst;
+CREATE ROLE data_viewer WITH LOGIN PASSWORD 'viewer123';
+CREATE USER report_user WITH PASSWORD 'report456';
+
+SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%';
+
+--Task6.2
+CREATE ROLE db_creator   WITH LOGIN CREATEDB   PASSWORD 'creator789';
+CREATE ROLE user_manager WITH LOGIN CREATEROLE PASSWORD 'manager101';
+CREATE ROLE admin_user   WITH LOGIN SUPERUSER  PASSWORD 'admin999';
+
+--Task6.3
+GRANT SELECT ON employees, departments, projects TO analyst;
+GRANT ALL PRIVILEGES ON employee_details TO data_viewer;
+GRANT SELECT, INSERT ON employees TO report_user;
+
+--Task6.4
+CREATE ROLE hr_team;
+CREATE ROLE finance_team;
+CREATE ROLE it_team;
+
+CREATE USER hr_user1      WITH PASSWORD 'hr001';
+CREATE USER hr_user2      WITH PASSWORD 'hr002';
+CREATE USER finance_user1 WITH PASSWORD 'fin001';
+
+GRANT hr_team      TO hr_user1, hr_user2;
+GRANT finance_team TO finance_user1;
+
+GRANT SELECT, UPDATE ON employees TO hr_team;
+GRANT SELECT ON dept_statistics TO finance_team;
+
+--Task6.5
+REVOKE UPDATE ON employees FROM hr_team;
+REVOKE hr_team FROM hr_user2;
+REVOKE ALL PRIVILEGES ON employee_details FROM data_viewer;
+
+--Task6.6
+ALTER ROLE analyst WITH LOGIN PASSWORD 'analyst123';
+ALTER ROLE user_manager WITH SUPERUSER;
+ALTER ROLE analyst WITH PASSWORD NULL;
+ALTER ROLE data_viewer WITH CONNECTION LIMIT 5;
+
+SELECT rolname, rolsuper, rolcreaterole, rolcreatedb, rolcanlogin, rolconnlimit
+FROM pg_roles
+WHERE rolname IN ('analyst', 'user_manager', 'data_viewer', 'db_creator', 'admin_user');
+
+
+--Part7
+
+--Task7.1
+CREATE ROLE read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO read_only;
+
+CREATE ROLE junior_analyst WITH LOGIN PASSWORD 'junior123';
+CREATE ROLE senior_analyst WITH LOGIN PASSWORD 'senior123';
+
+GRANT read_only TO junior_analyst, senior_analyst;
+
+GRANT INSERT, UPDATE ON employees TO senior_analyst;
+
+--Task7.2
+CREATE ROLE project_manager WITH LOGIN PASSWORD 'pm123';
+
+ALTER VIEW dept_statistics OWNER TO project_manager;
+ALTER TABLE projects OWNER TO project_manager;
+
+SELECT tablename, tableowner
+FROM pg_tables
+WHERE schemaname = 'public';
+
+SELECT viewname, viewowner
+FROM pg_views
+WHERE schemaname = 'public';
+
+--Task7.3
+CREATE ROLE temp_owner WITH LOGIN;
+
+CREATE TABLE temp_table (
+    id INT
+);
+
+ALTER TABLE temp_table OWNER TO temp_owner;
+
+REASSIGN OWNED BY temp_owner TO postgres;
+DROP OWNED BY temp_owner;
+DROP ROLE temp_owner;
+
+--Task7.4
+CREATE VIEW hr_employee_view AS
+SELECT emp_id, emp_name, dept_id, salary
+FROM employees
+WHERE dept_id = 102;
+
+GRANT SELECT ON hr_employee_view TO hr_team;
+
+CREATE VIEW finance_employee_view AS
+SELECT emp_id, emp_name, salary
+FROM employees;
+
+GRANT SELECT ON finance_employee_view TO finance_team;
+
+
+--Part8
+
+--Task8.1
+CREATE VIEW dept_dashboard AS
+SELECT d.dept_name,
+       d.location,
+       COALESCE(e.employee_count, 0)    AS employee_count,
+       COALESCE(e.avg_salary, 0)        AS avg_salary,
+       COALESCE(p.active_projects, 0)   AS active_projects,
+       COALESCE(p.total_budget, 0)      AS total_project_budget,
+       ROUND(
+           COALESCE(p.total_budget, 0) / NULLIF(e.employee_count, 0),
+           2
+       )                                AS budget_per_employee
+FROM departments d
+LEFT JOIN (
+    SELECT dept_id,
+           COUNT(*)               AS employee_count,
+           ROUND(AVG(salary), 2)  AS avg_salary
+    FROM employees
+    GROUP BY dept_id
+) e ON d.dept_id = e.dept_id
+LEFT JOIN (
+    SELECT dept_id,
+           COUNT(*)    AS active_projects,
+           SUM(budget) AS total_budget
+    FROM projects
+    GROUP BY dept_id
+) p ON d.dept_id = p.dept_id;
+
+SELECT * FROM dept_dashboard;
+
+--Task8.2
+ALTER TABLE projects
+    ADD COLUMN created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+CREATE VIEW high_budget_projects AS
+SELECT p.project_name,
+       p.budget,
+       d.dept_name,
+       p.created_date,
+       CASE
+           WHEN p.budget > 150000 THEN 'Critical Review Required'
+           WHEN p.budget > 100000 THEN 'Management Approval Needed'
+           ELSE 'Standard Process'
+       END AS approval_status
+FROM projects p
+LEFT JOIN departments d ON p.dept_id = d.dept_id
+WHERE p.budget > 75000;
+
+SELECT * FROM high_budget_projects;
+
+--Task8.3
+CREATE ROLE viewer_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO viewer_role;
+
+CREATE ROLE entry_role;
+GRANT viewer_role TO entry_role;
+GRANT INSERT ON employees, projects TO entry_role;
+
+CREATE ROLE analyst_role;
+GRANT entry_role TO analyst_role;
+GRANT UPDATE ON employees, projects TO analyst_role;
+
+CREATE ROLE manager_role;
+GRANT analyst_role TO manager_role;
+GRANT DELETE ON employees, projects TO manager_role;
+
+CREATE USER alice   WITH PASSWORD 'alice123';
+CREATE USER bob     WITH PASSWORD 'bob123';
+CREATE USER charlie WITH PASSWORD 'charlie123';
+
+GRANT viewer_role  TO alice;
+GRANT analyst_role TO bob;
+GRANT manager_role TO charlie;
+
+SELECT r.rolname AS role, m.rolname AS member
+FROM pg_auth_members am
+JOIN pg_roles r ON am.roleid = r.oid
+JOIN pg_roles m ON am.member = m.oid
+WHERE m.rolname NOT LIKE 'pg_%'
+ORDER BY r.rolname, m.rolname;
