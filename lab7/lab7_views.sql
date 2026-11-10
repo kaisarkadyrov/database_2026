@@ -138,3 +138,127 @@ WHERE salary < 50000;
 SELECT * FROM temp_view;
 
 DROP VIEW temp_view;
+
+
+--Part4
+
+--Task4.1
+CREATE VIEW employee_salaries AS
+SELECT emp_id, emp_name, dept_id, salary
+FROM employees;
+
+
+--Task4.2
+UPDATE employee_salaries
+SET salary = 52000
+WHERE emp_name = 'John Smith';
+
+SELECT * FROM employees WHERE emp_name = 'John Smith';
+-- Answer: yes, the underlying employees table was updated. The view stores
+-- no data itself, so the UPDATE is applied to employees.
+
+
+--Task4.3
+INSERT INTO employee_salaries (emp_id, emp_name, dept_id, salary)
+VALUES (6, 'Alice Johnson', 102, 58000);
+
+SELECT * FROM employees;
+-- Answer: the insert was successful; Alice Johnson now appears in the
+-- employees table.
+
+
+--Task4.4
+CREATE VIEW it_employees AS
+SELECT emp_id, emp_name, dept_id, salary
+FROM employees
+WHERE dept_id = 101
+WITH LOCAL CHECK OPTION;
+
+-- This should fail
+INSERT INTO it_employees (emp_id, emp_name, dept_id, salary)
+VALUES (7, 'Bob Wilson', 103, 60000);
+-- Answer: ERROR: new row violates check option for view "it_employees"
+-- DETAIL: Failing row contains (7, Bob Wilson, 103, 60000.00).
+-- Reason: CHECK OPTION rejects inserts/updates that produce rows not
+-- satisfying the view's WHERE condition (dept_id = 101), i.e. rows that
+-- would not be visible through the view after the insert.
+
+
+
+--Part 5
+
+--Task5.1
+CREATE MATERIALIZED VIEW dept_summary_mv AS
+SELECT d.dept_id,
+       d.dept_name,
+       COALESCE(e.total_employees, 0) AS total_employees,
+       COALESCE(e.total_salaries, 0)  AS total_salaries,
+       COALESCE(p.total_projects, 0)  AS total_projects,
+       COALESCE(p.total_budget, 0)    AS total_budget
+FROM departments d
+LEFT JOIN (
+    SELECT dept_id,
+           COUNT(*)    AS total_employees,
+           SUM(salary) AS total_salaries
+    FROM employees
+    GROUP BY dept_id
+) e ON d.dept_id = e.dept_id
+LEFT JOIN (
+    SELECT dept_id,
+           COUNT(*)    AS total_projects,
+           SUM(budget) AS total_budget
+    FROM projects
+    GROUP BY dept_id
+) p ON d.dept_id = p.dept_id
+WITH DATA;
+
+SELECT * FROM dept_summary_mv ORDER BY total_employees DESC;
+
+
+--Task5.2
+INSERT INTO employees (emp_id, emp_name, dept_id, salary)
+VALUES (8, 'Charlie Brown', 101, 54000);
+
+-- Before refresh:
+SELECT * FROM dept_summary_mv ORDER BY total_employees DESC;
+
+REFRESH MATERIALIZED VIEW dept_summary_mv;
+
+-- After refresh:
+SELECT * FROM dept_summary_mv ORDER BY total_employees DESC;
+-- Answer: before REFRESH the materialized view still shows the old snapshot
+-- taken at creation time, so Charlie Brown is not counted. After REFRESH,
+-- IT (101) has total_employees increased by 1 and total_salaries by 54000.
+
+
+--Task5.3
+CREATE UNIQUE INDEX idx_dept_summary_mv_dept_id
+    ON dept_summary_mv (dept_id);
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY dept_summary_mv;
+-- Answer: a regular REFRESH takes an ACCESS EXCLUSIVE lock, so nobody can
+-- read the materialized view while it runs. CONCURRENTLY refreshes the data
+-- without blocking SELECT queries: it builds a new version and applies only
+-- the differences. It requires a unique index and works only if the view
+-- is already populated.
+
+
+--Task5.4
+CREATE MATERIALIZED VIEW project_stats_mv AS
+SELECT p.project_name,
+       p.budget,
+       d.dept_name,
+       COUNT(e.emp_id) AS assigned_employees
+FROM projects p
+LEFT JOIN departments d ON p.dept_id = d.dept_id
+LEFT JOIN employees e   ON p.dept_id = e.dept_id
+GROUP BY p.project_id, p.project_name, p.budget, d.dept_name
+WITH NO DATA;
+
+SELECT * FROM project_stats_mv;
+-- Answer: ERROR: materialized view "project_stats_mv" has not been populated
+-- HINT: Use the REFRESH MATERIALIZED VIEW command.
+-- Fix: populate it with data:
+REFRESH MATERIALIZED VIEW project_stats_mv;
+
+SELECT * FROM project_stats_mv;
