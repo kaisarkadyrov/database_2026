@@ -201,3 +201,449 @@ SELECT * FROM fee_summary();
 
 --3.5
 
+
+--Part 4
+CREATE OR REPLACE FUNCTION total_fees(p_member_id INT) RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(fee), 0) INTO v_total
+      FROM rentals
+     WHERE member_id = p_member_id;
+    RETURN v_total;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT total_fees(1);
+SELECT total_fees(6);
+
+--4.2
+CREATE OR REPLACE FUNCTION total_fees(p_member_id INT, p_from_date DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(fee), 0) INTO v_total
+      FROM rentals
+     WHERE member_id = p_member_id
+       AND start_date >= p_from_date;
+    RETURN v_total;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT total_fees(1, DATE '2024-01-01');
+SELECT total_fees(1, DATE '2025-01-01');
+
+SELECT p.oid::regprocedure AS signature, pg_get_function_result(p.oid) AS returns
+  FROM pg_proc p
+ WHERE p.proname = 'total_fees'
+ ORDER BY 1::text;
+
+--4.3
+CREATE OR REPLACE FUNCTION total_fees(p_member_id INT,
+                                      p_from_date DATE DEFAULT DATE '2025-01-01')
+RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(fee), 0) INTO v_total
+      FROM rentals
+     WHERE member_id = p_member_id
+       AND start_date >= p_from_date;
+    RETURN v_total;
+END; $$
+LANGUAGE plpgsql;
+
+-- EXPECTED ERROR: function total_fees(integer) is not unique
+SELECT total_fees(1);
+
+--4.4
+DROP FUNCTION total_fees(INTEGER);
+SELECT total_fees(1);
+
+--4.5
+CREATE OR REPLACE FUNCTION total_fees(p_full_name VARCHAR) RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(r.fee), 0) INTO v_total
+      FROM members m
+      JOIN rentals r ON r.member_id = m.member_id
+     WHERE m.full_name = p_full_name;
+    RETURN v_total;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT total_fees('Aisha Nurlanova');
+SELECT total_fees(1);
+
+--Part 5
+--5.1
+CREATE OR REPLACE FUNCTION find_bikes(p_pattern VARCHAR)
+RETURNS TABLE (found_id INT, found_model VARCHAR, found_rate NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT b.bike_id, b.model, b.daily_rate
+          FROM bikes b
+         WHERE b.model ILIKE p_pattern
+         ORDER BY b.bike_id;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM find_bikes('%road%');
+SELECT * FROM find_bikes('%Mini');
+
+--5.2
+CREATE OR REPLACE FUNCTION member_history(p_member_id INT)
+RETURNS TABLE (h_rental_id INT,
+               h_model     VARCHAR,
+               h_station   VARCHAR,
+               h_days      INT,
+               h_fee       NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT r.rental_id,
+               b.model,
+               s.station_name,
+               r.end_date - r.start_date,
+               r.fee
+          FROM rentals r
+          JOIN bikes b         ON b.bike_id = r.bike_id
+          LEFT JOIN stations s ON s.station_id = b.station_id
+         WHERE r.member_id = p_member_id
+         ORDER BY r.start_date;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM member_history(3);
+
+
+--5.3
+CREATE OR REPLACE FUNCTION bike_list(p_station_id INT)
+RETURNS TABLE (bike_id INT, model VARCHAR) AS $$
+BEGIN
+    RETURN QUERY SELECT bike_id, model FROM bikes WHERE station_id = p_station_id;
+END; $$ LANGUAGE plpgsql;
+
+-- EXPECTED ERROR: column reference "bike_id" is ambiguous
+SELECT * FROM bike_list(10);
+
+-- Fix 1: rename the output columns (the return type changes, so DROP first)
+DROP FUNCTION bike_list(INT);
+CREATE FUNCTION bike_list(p_station_id INT)
+RETURNS TABLE (out_bike_id INT, out_model VARCHAR) AS $$
+BEGIN
+    RETURN QUERY SELECT bike_id, model FROM bikes WHERE station_id = p_station_id;
+END; $$ LANGUAGE plpgsql;
+
+SELECT * FROM bike_list(10);
+
+-- Fix 2: keep the names, qualify table columns with an alias
+DROP FUNCTION bike_list(INT);
+CREATE FUNCTION bike_list(p_station_id INT)
+RETURNS TABLE (bike_id INT, model VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT b.bike_id, b.model
+          FROM bikes b
+         WHERE b.station_id = p_station_id
+         ORDER BY b.bike_id;
+END; $$ LANGUAGE plpgsql;
+
+SELECT * FROM bike_list(10);
+
+--5.4
+CREATE OR REPLACE FUNCTION station_board(p_city VARCHAR)
+RETURNS TABLE (s_name VARCHAR, s_bikes INT, s_free INT) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT s.station_name,
+               COUNT(b.bike_id),
+               s.capacity - COUNT(b.bike_id)
+          FROM stations s
+          LEFT JOIN bikes b ON b.station_id = s.station_id
+         WHERE s.city = p_city
+         GROUP BY s.station_id, s.station_name, s.capacity
+         ORDER BY s.station_id;
+END; $$ LANGUAGE plpgsql;
+
+-- EXPECTED ERROR: structure of query does not match function result type
+SELECT * FROM station_board('Almaty');
+
+-- Correct version WITH explicit casts
+CREATE OR REPLACE FUNCTION station_board(p_city VARCHAR)
+RETURNS TABLE (s_name VARCHAR, s_bikes INT, s_free INT) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT s.station_name,
+               COUNT(b.bike_id)::INT,
+               (s.capacity - COUNT(b.bike_id))::INT
+          FROM stations s
+          LEFT JOIN bikes b ON b.station_id = s.station_id
+         WHERE s.city = p_city
+         GROUP BY s.station_id, s.station_name, s.capacity
+         ORDER BY s.station_id;
+END; $$ LANGUAGE plpgsql;
+
+SELECT * FROM station_board('Almaty');
+SELECT * FROM station_board('Astana');
+
+--Part 6
+--6.1
+DO $$
+<<rental_report>>
+DECLARE
+    total_rentals INTEGER := 0;
+BEGIN
+    SELECT COUNT(*) INTO total_rentals FROM rentals;
+    RAISE NOTICE 'The rentals table holds % rows.', total_rentals;
+END rental_report $$;
+
+-- EXPECTED ERROR: end label does not match the start label
+DO $$
+<<rental_report>>
+DECLARE
+    total_rentals INTEGER := 0;
+BEGIN
+    SELECT COUNT(*) INTO total_rentals FROM rentals;
+    RAISE NOTICE 'The rentals table holds % rows.', total_rentals;
+END wrong_label $$;
+
+--6.2
+DO $$
+<<rental_report>>
+DECLARE
+    total_rentals INTEGER := 0;
+    fee_total     NUMERIC;
+BEGIN
+    SELECT COUNT(*) INTO total_rentals FROM rentals;
+    RAISE NOTICE 'The rentals table holds % rows.', total_rentals;
+
+    SELECT SUM(fee) INTO fee_total FROM rentals;
+    RAISE NOTICE '1) Outer fee_total before subblock: %', fee_total;
+
+    <<recent>>
+    DECLARE
+        fee_total NUMERIC;            -- hides the outer fee_total
+    BEGIN
+        SELECT SUM(fee) INTO fee_total
+          FROM rentals
+         WHERE start_date >= DATE '2025-01-01';
+        RAISE NOTICE '2) Subblock fee_total:              %', fee_total;
+        RAISE NOTICE '3) Outer value via label:           %', rental_report.fee_total;
+    END recent;
+
+    RAISE NOTICE '4) Outer fee_total after subblock:  %', fee_total;
+END rental_report $$;
+
+--6.3
+DO $$
+<<outer_blk>>
+DECLARE
+    fee_total NUMERIC;
+BEGIN
+    SELECT SUM(fee) INTO fee_total FROM rentals;
+
+    <<first_sub>>
+    DECLARE
+        recent_cnt INT;
+    BEGIN
+        SELECT COUNT(*) INTO recent_cnt FROM rentals
+         WHERE start_date >= DATE '2025-01-01';
+        RAISE NOTICE 'first_sub: recent_cnt = %', recent_cnt;
+    END first_sub;
+
+    <<second_sub>>
+    BEGIN
+        RAISE NOTICE 'second_sub: recent_cnt = %', recent_cnt;
+    END second_sub;
+END outer_blk $$;
+
+-- Fixed: the declaration is moved up into the outer block
+DO $$
+<<outer_blk>>
+DECLARE
+    fee_total  NUMERIC;
+    recent_cnt INT;                   -- now visible to both subblocks
+BEGIN
+    SELECT SUM(fee) INTO fee_total FROM rentals;
+
+    <<first_sub>>
+    BEGIN
+        SELECT COUNT(*) INTO recent_cnt FROM rentals
+         WHERE start_date >= DATE '2025-01-01';
+        RAISE NOTICE 'first_sub: recent_cnt = %', recent_cnt;
+    END first_sub;
+
+    <<second_sub>>
+    BEGIN
+        RAISE NOTICE 'second_sub: recent_cnt = %', recent_cnt;
+    END second_sub;
+END outer_blk $$;
+
+--6.4
+CREATE OR REPLACE FUNCTION fee_split(
+    p_from_date DATE,
+    OUT before_total NUMERIC,
+    OUT after_total  NUMERIC)
+AS $$
+BEGIN
+    SELECT COALESCE(SUM(fee) FILTER (WHERE start_date <  p_from_date), 0),
+           COALESCE(SUM(fee) FILTER (WHERE start_date >= p_from_date), 0)
+      INTO before_total, after_total
+      FROM rentals;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM fee_split(DATE '2025-01-01');
+
+SELECT f.before_total, f.after_total,
+       f.before_total + f.after_total AS sum_of_parts,
+       (SELECT SUM(fee) FROM rentals)  AS table_total
+  FROM fee_split(DATE '2025-01-01') f;
+
+--Part 7
+--7.1
+CREATE OR REPLACE FUNCTION station_load(
+    p_station_id INT,
+    OUT bikes_parked INT,
+    OUT capacity_pct NUMERIC)
+AS $$
+DECLARE
+    v_capacity INT;
+BEGIN
+    SELECT capacity INTO v_capacity
+      FROM stations
+     WHERE station_id = p_station_id;
+
+    SELECT COUNT(*) INTO bikes_parked
+      FROM bikes
+     WHERE station_id = p_station_id;
+
+    -- capacity 0 -> percentage is undefined -> NULL (no division by zero)
+    capacity_pct := ROUND(100.0 * bikes_parked / NULLIF(v_capacity, 0), 1);
+END; $$
+LANGUAGE plpgsql;
+
+SELECT s.station_id, s.station_name, l.*
+  FROM stations s, LATERAL station_load(s.station_id) l
+ ORDER BY s.station_id;
+
+--7.2
+CREATE OR REPLACE FUNCTION top_members(p_limit INT DEFAULT 3)
+RETURNS TABLE (t_name VARCHAR, t_rentals INT, t_spent NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT m.full_name,
+               COUNT(r.rental_id)::INT,
+               COALESCE(SUM(r.fee), 0)
+          FROM members m
+          LEFT JOIN rentals r ON r.member_id = m.member_id
+         GROUP BY m.member_id, m.full_name
+         ORDER BY 3 DESC, m.member_id
+         LIMIT p_limit;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM top_members();
+SELECT * FROM top_members(6);
+
+--7.3
+CREATE OR REPLACE FUNCTION rental_invoice(p_rental_id INT)
+RETURNS TABLE (i_member VARCHAR,
+               i_model  VARCHAR,
+               i_days   INT,
+               i_amount NUMERIC,
+               i_status VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT m.full_name,
+               b.model,
+               COALESCE(r.end_date, CURRENT_DATE) - r.start_date,
+               ROUND((COALESCE(r.end_date, CURRENT_DATE) - r.start_date) * b.daily_rate, 2),
+               (CASE WHEN r.end_date IS NULL THEN 'OPEN' ELSE 'CLOSED' END)::VARCHAR
+          FROM rentals r
+          JOIN members m ON m.member_id = r.member_id
+          JOIN bikes   b ON b.bike_id   = r.bike_id
+         WHERE r.rental_id = p_rental_id;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM rental_invoice(11);
+SELECT * FROM rental_invoice(19);
+SELECT CURRENT_DATE AS run_date;
+
+--7.4
+CREATE OR REPLACE FUNCTION city_report(p_city VARCHAR)
+RETURNS TABLE (c_members INT, c_rentals INT, c_revenue NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT COUNT(DISTINCT m.member_id)::INT,
+               COUNT(r.rental_id)::INT,
+               COALESCE(SUM(r.fee), 0)
+          FROM members m
+          LEFT JOIN rentals r ON r.member_id = m.member_id
+         WHERE m.city = p_city;
+END; $$
+LANGUAGE plpgsql;
+
+-- Overloaded version: date condition in the ON clause (correct)
+CREATE OR REPLACE FUNCTION city_report(p_city VARCHAR, p_from_date DATE)
+RETURNS TABLE (c_members INT, c_rentals INT, c_revenue NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT COUNT(DISTINCT m.member_id)::INT,
+               COUNT(r.rental_id)::INT,
+               COALESCE(SUM(r.fee), 0)
+          FROM members m
+          LEFT JOIN rentals r
+                 ON r.member_id = m.member_id
+                AND r.start_date >= p_from_date
+         WHERE m.city = p_city;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT 'Almaty' AS city, * FROM city_report('Almaty')
+UNION ALL SELECT 'Astana',   * FROM city_report('Astana')
+UNION ALL SELECT 'Shymkent', * FROM city_report('Shymkent');
+
+SELECT 'ON clause' AS variant, * FROM city_report('Almaty', DATE '2025-01-01');
+
+-- Comparison: the same condition placed in WHERE (wrong variant)
+SELECT 'WHERE clause' AS variant,
+       COUNT(DISTINCT m.member_id)::INT AS c_members,
+       COUNT(r.rental_id)::INT          AS c_rentals,
+       COALESCE(SUM(r.fee), 0)          AS c_revenue
+  FROM members m
+  LEFT JOIN rentals r ON r.member_id = m.member_id
+ WHERE m.city = 'Almaty'
+   AND r.start_date >= DATE '2025-01-01';
+
+
+/*
+=====================================================================
+Lab Questions
+=====================================================================
+
+1. A function's name is only its identifier, e.g. total_fees. Its signature is the name together with the list of input argument types, e.g. total_fees(integer, date); OUT parameters and the return type are not part of it. Because of overloading, several functions can share one name, so the name alone does not tell PostgreSQL which one to remove. DROP FUNCTION therefore needs the full signature, e.g. DROP FUNCTION total_fees(INTEGER); a bare DROP FUNCTION total_fees fails when the name is not unique.
+
+2. The function body is a string constant. Dollar quoting ($$ ... $$) lets the body contain single quotes without escaping them, so the SQL inside reads naturally. Without it, every quote inside the body has to be doubled, for example:
+CREATE FUNCTION greet(p_name TEXT) RETURNS TEXT AS '
+BEGIN
+    RETURN ''Hello, '' || p_name || ''! Today is '' || to_char(now(), ''DD.MM.YYYY'');
+END;' LANGUAGE plpgsql;
+With dollar quoting the same body is written with normal quotes: 'Hello, ', 'DD.MM.YYYY'.
+
+3. Several OUT parameters are best when the function always returns exactly one row of a few values, such as member_stats, fee_split or station_load. The values are assigned directly in the body, and the function can be called once per row with LATERAL. RETURNS TABLE is best when the function returns a set of zero or more rows, such as find_bikes or member_history, filled with RETURN QUERY or RETURN NEXT.
+
+4. A VARIADIC parameter collects all remaining arguments, so there must be a fixed point where it ends. If f(VARIADIC ids INT[], p_limit INT) were allowed, the call f(10, 20, 30) could mean ids = {10, 20} and p_limit = 30, or ids = {10} and p_limit = 20 with 30 left over. With f(p_limit INT, VARIADIC ids INT[]) the rule is unambiguous: the fixed parameters take the first values, and everything after them goes into the array.
+
+5. RETURN expression ends the function and returns a single value (in a function with OUT parameters, a bare RETURN; just ends it). RETURN QUERY SELECT ... is used in set-returning functions: it appends all rows of the query to the result set but does not end the function, which finishes at END or at a final RETURN;. Several RETURN QUERY statements can add rows one after another.
+
+6. A parameter with a default value lets a function match calls with fewer arguments. If another overload already matches that shorter call, both become equally good candidates, and a call that worked before now fails with "function ... is not unique" (Exercise 4.3: total_fees(INT) and total_fees(INT, DATE DEFAULT ...)). To avoid this in production: check existing overloads with \df before adding defaults, avoid combining overloading and default values on the same name, give functions with different meanings different names, apply changes through reviewed migration scripts that drop the old version in the same transaction, and test the application's calls after the change.
+
+7. A variable declared in a subblock exists only while that subblock runs. When the subblock reaches END, the variable disappears together with its value, and the name again refers to the outer variable, which the subblock did not change. Inside the subblock a shadowed outer variable is read by qualifying it with the outer block's label: outer_label.variable, e.g. rental_report.fee_total.
+
+8. Advantage: the business rule is defined once and shared by every application, it runs next to the data in a single round trip, and users can be granted EXECUTE on the function without direct access to the tables. Disadvantage: the logic is harder to version-control, test and debug than application code, it is written in PostgreSQL-specific PL/pgSQL that does not port to another DBMS, and it moves CPU load onto the database server, which is the hardest part of the system to scale.
+
+9. A trusted language such as PL/pgSQL or PL/Perl runs sandboxed: it can only work through the database and cannot access the server's file system, network or operating system. Any ordinary user with USAGE on the language (for PL/pgSQL it is granted to PUBLIC by default) and CREATE on the schema may write functions in it. An untrusted language such as PL/Python (plpython3u) or C can do anything the database server's
